@@ -12,17 +12,28 @@ class TLModel(arc.Architecture):
         :param architecture_class: The architecture class (e.g., GRUseq2seq).
         :param kwargs: Architecture hyperparameters.
         """
+        # Normalize architecture_name
+        if isinstance(architecture_name, str):
+            arch_name = architecture_name
+            architecture_class = getattr(arc, arch_name, None)
+            if architecture_class is None:
+                raise ValueError(f"Architecture {arch_name} not found in biosignals_architectures.")
+        else:
+            # assume it's a class
+            architecture_class = architecture_name
+            arch_name = architecture_class.__name__
+
         super().__init__(architecture_name=architecture_name)
-        self.architecture_name = architecture_name
-        self.architecture_class = getattr(arc, self.architecture_name, None)
-        if not self.architecture_class:
-            raise ValueError(f"Architecture {self.architecture_name} not found in biosignals_architectures.")
+        self.architecture_name = arch_name
+        self.architecture_class = architecture_class
+
         self.hyperparams = kwargs  # model_name is part of the biosignals_architecture kwargs
         self.model = self.architecture_class(**self.hyperparams)
+        
         # Dynamically set kwargs as attributes
         for key, value in kwargs.items():
             setattr(self, key, value)
-        print(f"✅ TransferLearningModel initialized with architecture: {self.architecture_class.__name__}")
+        print(f"TransferLearningModel initialized with architecture: {self.architecture_class.__name__}")
 
     def inject_weights(self, layer_mapping):
         """
@@ -30,29 +41,37 @@ class TLModel(arc.Architecture):
         :param layer_mapping: Dict mapping target layers in TLModel to source state_dicts.
                               Example: {'model.gru_layers.0': source_GRU_layer.state_dict()}
         """
-        print(f"layer mapping items: {layer_mapping.items()}")
+        print("Injecting weights into TLModel layers...")
+        injected = []
+        failed = []
+
         for layer_name, source_state_dict in layer_mapping.items():
-            print(f"layer_name: {layer_name}")
             try:
                 # Navigate to the target layer
-                if '.' in layer_name:
-                    print(f"hi - {layer_name}")
-                    parts = layer_name.split('.')
-                    current_attr = self.model
-                    for part in parts:
-                        if part.isdigit():
-                            current_attr = current_attr[int(part)]
-                        else:
-                            current_attr = getattr(current_attr, part)
+                parts = layer_name.split('.')
+                current_attr = self.model
+                for part in parts:
+                    if part.isdigit():
+                        current_attr = current_attr[int(part)]
+                    else:
+                        current_attr = getattr(current_attr, part)
 
                     # Load the state_dict into the target layer
-                    current_attr.load_state_dict(source_state_dict)
-                    print(f"✅ Weights injected into {layer_name} from source layer.")
-                else:
-                    raise ValueError(f"Layer '{layer_name}' not found in TLModel.")
+                current_attr.load_state_dict(source_state_dict)
+                injected.append(layer_name)
             except (AttributeError, IndexError) as e:
-                raise ValueError(f"Failed to inject weights into {layer_name}: {e}")
-
+                failed.append((layer_name, str(e)))
+        
+        if injected:
+            print(f"Successfully injected weights into layers: {injected}")
+        else:
+            print("No layers were injected.")
+        if failed:
+            for name, err in failed:
+                print(f"Failed to inject layer '{name}': {err}")
+        else:
+            print("All specified layers were injected successfully.")
+        
     def forward(self, X, lengths=None):
         """
         Forward pass through the architecture.
@@ -93,7 +112,7 @@ class TLModel(arc.Architecture):
             if hasattr(self.model, layer_name):
                 for param in getattr(self.model, layer_name).parameters():
                     param.requires_grad = False
-                print(f"✅ Layer '{layer_name}' has been frozen.")
+                print(f"Layer '{layer_name}' has been frozen.")
             else:
                 raise AttributeError(f"Layer '{layer_name}' not found in the model.")
 
@@ -106,7 +125,7 @@ class TLModel(arc.Architecture):
             if hasattr(self.model, layer_name):
                 for param in getattr(self.model, layer_name).parameters():
                     param.requires_grad = True
-                print(f"✅ Layer '{layer_name}' has been unfrozen.")
+                print(f"Layer '{layer_name}' has been unfrozen.")
             else:
                 raise AttributeError(f"Layer '{layer_name}' not found in the model.")
 
@@ -125,7 +144,7 @@ class TLFactory:
         """
         model = ProductionModel(model_name=model_name)
         self.models[model_name] = model
-        print(f"✅ Loaded ProductionModel: {model_name}")
+        print(f"Loaded ProductionModel: {model_name}")
 
     def configure_tl_model(self, tl_model, layer_mapping, freeze_layers=None, unfreeze_layers=None):
         """
@@ -138,11 +157,11 @@ class TLFactory:
         :param unfreeze_layers: List of layer names to unfreeze.
         """
         # Step 1: Inject Weights
-        print("🔄 Injecting weights into TLModel layers...")
         tl_model.inject_weights(layer_mapping)
 
         # Step 2: Freeze Layers
         if freeze_layers:
+            print("-"*40)
             print("Freezing specified layers...")
             for layer_name in freeze_layers:
                 try:
@@ -155,12 +174,13 @@ class TLFactory:
                             current_attr = getattr(current_attr, part)
                     for param in current_attr.parameters():
                         param.requires_grad = False
-                    print(f"✅ Layer '{layer_name}' frozen.")
+                    print(f"Layer '{layer_name}' frozen.")
                 except (AttributeError, IndexError) as e:
                     raise ValueError(f"Failed to freeze layer '{layer_name}': {e}")
 
         # Step 3: Unfreeze Layers
         if unfreeze_layers:
+            print("-"*40)
             print("Unfreezing specified layers...")
             for layer_name in unfreeze_layers:
                 try:
@@ -173,11 +193,11 @@ class TLFactory:
                             current_attr = getattr(current_attr, part)
                     for param in current_attr.parameters():
                         param.requires_grad = True
-                    print(f"✅ Layer '{layer_name}' unfrozen.")
+                    print(f"Layer '{layer_name}' unfrozen.")
                 except (AttributeError, IndexError) as e:
                     raise ValueError(f"Failed to unfreeze layer '{layer_name}': {e}")
 
-        print("✅ TLModel successfully configured!")
+        print("TLModel successfully configured!")
 
     def configure_tl_model_old(self, tl_model, layer_mapping, freeze_layers=None, unfreeze_layers=None):
         """
@@ -206,5 +226,5 @@ class TLFactory:
         if unfreeze_layers:
             tl_model.unfreeze_layers(unfreeze_layers)
 
-        print("✅ TransferLearningModel successfully configured.")
+        print("TransferLearningModel successfully configured.")
 

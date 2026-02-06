@@ -18,7 +18,7 @@ def configure_seed(seed):
 
 
 def configure_device(gpu_id=None):
-    if gpu_id is not None:
+    if gpu_id is not None and torch.cuda.is_available():
         torch.cuda.set_device(gpu_id)
         print(f"Using GPU: {torch.cuda.get_device_name(gpu_id)} (GPU ID: {gpu_id})")
         return gpu_id

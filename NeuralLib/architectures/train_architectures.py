@@ -7,11 +7,11 @@ def get_valid_architectures():
     """
     Get a list of valid architecture classes defined in biosignals_architectures.py.
     """
-    # print(list(dir(arc)))  # Debug: Print all names in the arc module
+    # Get all class names defined in biosignals_architectures
     valid_architectures = [
         name for name in dir(arc)
-        if isinstance(getattr(arc, name), type) and getattr(arc,
-                                                            name).__module__ == 'NeuralLib.architectures.biosignals_architectures'
+        if isinstance(getattr(arc, name), type) and getattr(
+            arc, name).__module__ == 'NeuralLib.architectures.biosignals_architectures'
     ]
     return valid_architectures
 
@@ -32,6 +32,8 @@ def validate_architecture_name(architecture_name):
     if architecture_name not in valid_architectures:
         raise ValueError(f"Invalid architecture name: {architecture_name}. "
                          f"Valid architectures are: {', '.join(valid_architectures)}")
+    else:
+        print(f"Architecture {architecture_name} is valid.")
 
 
 def train_architecture_from_scratch(architecture_name, architecture_params, train_params):
