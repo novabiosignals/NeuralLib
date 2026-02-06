@@ -21,12 +21,16 @@ def list_architectures():
     return architectures
 
 
-# TODO: ACRESCENTAR A CADA ARQUITECTURA VERIFICAÇÃO DOS INPUTS (TASK TEM QUE SER CLASSIFICATION OU REGRESSION, ETCETC)
-# TODO 2: acrescentar nos transformers a possibilidade de ser multilabel a classificação!
-# Sequence to sequence (direct correspondence between input and output) module
+# TODO: ADD INPUT VERIFICATION TO EACH ARCHITECTURE (TASK MUST BE CLASSIFICATION OR REGRESSION, ETC.)
+
+# Sequence-to-sequence (direct correspondence between input and output) module
+
 class GRUseq2seq(Architecture):
-    def __init__(self, model_name, n_features, hid_dim, n_layers, dropout, learning_rate, bidirectional=False,
-                 task='classification', num_classes=1, multi_label=False, fc_out_bool=True):
+    def __init__(
+            self, model_name, n_features, hid_dim, n_layers, dropout, learning_rate, 
+            bidirectional=False, bidir_per_layer=None, task='classification',
+            num_classes=1, multi_label=False, fc_out_bool=True
+    ):
         """
         :param n_features: Number of input channels/features per time step.
         :param hid_dim: Hidden dimension(s) of the GRU layers (int or vector of int - in the last case, the length
@@ -35,9 +39,12 @@ class GRUseq2seq(Architecture):
         :param dropout: Dropout rate(s).
         :param learning_rate: Learning rate.
         :param bidirectional: Whether the GRU layers are bidirectional.
+        :param bidir_per_layer: List indicating bidirectionality per layer (overrides bidirectional if provided).
         :param task: 'classification' or 'regression'.
         :param num_classes: Number of classes (for classification tasks). if binary, num_classes=1
         :param multi_label: Whether the classification task is multilabel.
+        :param fc_out_bool: Whether to include a fully connected output layer, for classification it's required;
+        for regression it's optional.
         """
         super(GRUseq2seq, self).__init__(architecture_name="GRUseq2seq")
         self.model_name = model_name
@@ -47,6 +54,7 @@ class GRUseq2seq(Architecture):
         self.dropout = dropout if isinstance(dropout, list) else [dropout] * n_layers
         self.learning_rate = learning_rate
         self.bidirectional = bidirectional
+        
         self.task = task  # classification or regression
         self.num_classes = num_classes if task == 'classification' else None  # only used if the task is classification
         self.multi_label = True if self.num_classes == 1 else multi_label
@@ -56,6 +64,15 @@ class GRUseq2seq(Architecture):
             raise ValueError(f"Invalid task '{self.task}'. Task must be either 'classification' or 'regression'.")
         if self.task == "regression" and self.multi_label:
             raise ValueError("Multi-label classification cannot be set to True when task is 'regression'.")
+        
+        # Set bidirectionality per layer
+        if bidir_per_layer is None:
+            bidir_per_layer = [bidirectional] * n_layers
+        #TODO: Make this available for users set less or more layers than n_layers
+        if len(bidir_per_layer) != n_layers:
+            raise ValueError(f"The length of bidir_per_layer ({len(bidir_per_layer)}) must match n_layers ({n_layers}).")
+        
+        self.bidir_per_layer = bidir_per_layer
 
         # Ensure hid_dim matches n_layers
         if len(self.hid_dim) != n_layers:
@@ -69,13 +86,15 @@ class GRUseq2seq(Architecture):
         input_dim = n_features
         for i in range(n_layers):
             self.gru_layers.append(
-                nn.GRU(input_size=input_dim,
-                       hidden_size=self.hid_dim[i],
-                       bidirectional=bidirectional,
-                       batch_first=True)
+                nn.GRU(
+                    input_size=input_dim,
+                    hidden_size=self.hid_dim[i],
+                    bidirectional=self.bidir_per_layer[i],
+                    batch_first=True
+                )
             )
             self.dropout_layers.append(nn.Dropout(p=self.dropout[i]))
-            input_dim = self.hid_dim[i] * (2 if bidirectional else 1)
+            input_dim = self.hid_dim[i] * (2 if self.bidir_per_layer[i] else 1)
 
         # Fully connected output layer
         if self.fc_out_bool:
@@ -88,11 +107,18 @@ class GRUseq2seq(Architecture):
             else:
                 self.criterion = nn.CrossEntropyLoss()
         else:
-            self.criterion = nn.MSELoss()
+            self.criterion = nn.MSELoss() # For regression tasks
 
         self.save_hyperparameters(ignore=["criterion"])
 
     def forward(self, x, lengths):
+        # make sure lengths is CPU int64
+        if not isinstance(lengths, torch.Tensor):
+            lengths = torch.as_tensor(lengths, dtype=torch.long)
+        else:
+            lengths = lengths.to(dtype=torch.long)
+        lengths = lengths.cpu()
+        
         # Pack the padded sequence (expects inputs in shape [batch_size, seq_len, input_size])
         packed_x = pack_padded_sequence(x, lengths, batch_first=True, enforce_sorted=False)
 
@@ -139,8 +165,11 @@ class GRUseq2seq(Architecture):
 
 
 class GRUseq2one(Architecture):
-    def __init__(self, model_name, n_features, hid_dim, n_layers, dropout, learning_rate, bidirectional=False,
-                 task='classification', num_classes=1, multi_label=False, fc_out_bool=True):
+    def __init__(
+            self, model_name, n_features, hid_dim, n_layers, dropout, learning_rate, 
+            bidirectional=False, bidir_per_layer=None,
+            task='classification', num_classes=1, multi_label=False, fc_out_bool=True
+    ):
         """
         :param n_features: Number of input channels/features per time step.
         :param hid_dim: Hidden dimension(s) of the GRU layers (int or vector of int - in the latter case, the length
@@ -161,6 +190,7 @@ class GRUseq2one(Architecture):
         self.dropout = dropout if isinstance(dropout, list) else [dropout] * self.n_layers
         self.learning_rate = learning_rate
         self.bidirectional = bidirectional
+        
         self.task = task  # classification or regression
         self.num_classes = num_classes if task == 'classification' else None  # only used if the task is classification
         self.multi_label = True if self.num_classes == 1 else multi_label
@@ -177,17 +207,29 @@ class GRUseq2one(Architecture):
         if len(self.dropout) != n_layers:
             raise ValueError(f"The length of dropout ({len(self.dropout)}) must match n_layers ({n_layers}).")
 
+        # Set per-layer bidirectionality
+        if bidir_per_layer is None:
+            bidir_per_layer = [bidirectional] * n_layers
+        if len(bidir_per_layer) != n_layers:
+            raise ValueError(f"len(bidir_per_layer) must match n_layers.")
+        self.bidir_per_layer = list(map(bool, bidir_per_layer))
+
         # Dynamically create GRU layers
         self.gru_layers = nn.ModuleList()
         self.dropout_layers = nn.ModuleList()
         input_dim = n_features
+        
         for i in range(n_layers):
             self.gru_layers.append(
-                nn.GRU(input_size=input_dim, hidden_size=self.hid_dim[i],
-                       bidirectional=bidirectional, batch_first=True)
+                nn.GRU(
+                    input_size=input_dim,
+                    hidden_size=self.hid_dim[i],
+                    bidirectional=self.bidir_per_layer[i],
+                    batch_first=True,
+                )
             )
             self.dropout_layers.append(nn.Dropout(p=self.dropout[i]))
-            input_dim = self.hid_dim[i] * (2 if bidirectional else 1)
+            input_dim = self.hid_dim[i] * (2 if self.bidir_per_layer[i] else 1)
 
         # Fully connected output layer - only applied to the last timestep of the sequence
         if fc_out_bool:
@@ -404,7 +446,7 @@ class Transformerseq2seq(Architecture):
         Sequence-to-sequence model using Transformer encoders and decoders.
         :param model_name: Name of the model instance, used for logging and checkpointing.
         :param n_features: Number of input channels/features per time step (i.e., signal channels).
-        :param d_model: Dimension of the transformer’s embedding space. Must match the expected input feature size for the transformer layers.
+        :param d_model: Dimension of the transformer's embedding space. Must match the expected input feature size for the transformer layers.
         :param nhead: Number of attention heads in the multi-head attention layers.
         :param num_encoder_layers: Number of stacked Transformer encoder layers.
         :param num_decoder_layers: Number of stacked Transformer decoder layers.
