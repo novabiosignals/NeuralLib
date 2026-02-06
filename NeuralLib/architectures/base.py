@@ -171,35 +171,17 @@ class Architecture(pl.LightningModule):
 
     def efficiency_metrics(self):
         """
-        Compute efficiency metrics for the model:
-
-        - Normalized FLOPs: Number of floating-point operations per signal, per channel, per timestep.
-          This reflects the computational cost of processing a single point in a biosignal.
-
-        - Params: Total number of trainable parameters in the model, reflecting memory footprint
-          and capacity, independent of input shape.
-
+        Return simple efficiency metrics without using calflops.
         Returns:
             tuple:
-                - flops_per_sample (float): Normalized FLOPs per signal × channel × timestep.
-                - params (int): Total number of trainable parameters in the model.
+                - flops_per_sample (None): FLOPs computation skipped.
+                - params (int): Total number of trainable parameters.
         """
-        # Define a reference input shape — arbitrary but consistent, since normalization removes dependency
-        batch_size = 256
-        channels = 1
-        seq_len = 1000
-        input_shape = (batch_size, channels, seq_len)
+        # Count total trainable parameters
+        params = sum(p.numel() for p in self.parameters() if p.requires_grad)
 
-        # Estimate FLOPs, MACs (not returned here), and parameter count
-        flops, _, params = calculate_flops(
-            model=self,
-            input_shape=input_shape,
-            output_as_string=False,
-            output_precision=4
-        )
-
-        # Normalize FLOPs to express efficiency per sample (per signal × channel × timestep)
-        flops_per_sample = flops / (batch_size * channels * seq_len)
+        # FLOPs cannot be computed safely for models requiring extra inputs, return None
+        flops_per_sample = None
 
         return flops_per_sample, params
 
@@ -284,7 +266,8 @@ class Architecture(pl.LightningModule):
                              "perform, for tracking the model's training process.")
 
         # Initialize the model
-        model = self  # same as doing: model = GRUseq2seq(n_features=self.n_features, hid_dim=self.hid_dim,...)
+        model = self  # Model has Initialized as self
+
         self.create_checkpoints_directory(retraining=False)
         print(f"Checkpoints directory created at {self.checkpoints_directory}")
 
@@ -424,6 +407,7 @@ class Architecture(pl.LightningModule):
 
         seq2one = self.architecture_name.endswith('2one')
         classification = self.task == 'classification'
+        
         # Datasets and Dataloaders
         train_dataset = DatasetSequence(path_x=path_x, path_y=path_y, part='train', all_samples=all_samples,
                                         samples=samples, seq2one=seq2one, min_max_norm_sig=min_max_norm_sig,
