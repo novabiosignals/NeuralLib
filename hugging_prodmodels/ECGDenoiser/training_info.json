@@ -1,0 +1,17 @@
+{
+    "architecture": "GRUseq2seq",
+    "model_name": "ECGDenoiser",
+    "train_dataset": "PTB-XL+MIT-BIH-Noise-Stress-Test-Database",
+    "biosignal": "ECG",
+    "sampling_frequency": 360,
+    "task": "ecg denoising: removing MA, BW and EM noise",
+    "gpu_model": "NVIDIA GeForce GTX 1080 Ti",
+    "epochs": 200,
+    "optimizer": "Adam",
+    "learning_rate": 0.005,
+    "validation_loss": 0,
+    "training_time": 0,
+    "retraining": false,
+    "efficiency_flops": 0,
+    "efficiency_params": 26121
+}

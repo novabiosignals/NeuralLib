@@ -1,0 +1,13 @@
+bidirectional: true
+dropout: 0
+hid_dim:
+- 64
+- 1
+learning_rate: 0.005
+model_name: ECGDenoiser
+multi_label: false
+n_features: 1
+n_layers: 2
+num_classes: NA
+task: regression
+fc_out_bool: false

@@ -227,4 +227,3 @@ class TLFactory:
             tl_model.unfreeze_layers(unfreeze_layers)
 
         print("TransferLearningModel successfully configured.")
-

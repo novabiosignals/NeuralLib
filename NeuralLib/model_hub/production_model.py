@@ -454,6 +454,3 @@ def build_freeze_phase(tl_model, reuse_n, strategy: str = "all", unfreeze_depth:
     print()
 
     return freeze_layers, unfreeze_layers
-
-    
-

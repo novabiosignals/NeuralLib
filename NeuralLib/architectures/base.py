@@ -50,7 +50,6 @@ def get_weights_and_info_from_checkpoints(prev_checkpoints_dir):
 
     return weights_pth, training_history
 
-
 def get_weights_and_info_from_hugging(hugging_face_model, local_dir=None):
     """
     Download weights and training history from Hugging Face.
@@ -77,7 +76,6 @@ def get_weights_and_info_from_hugging(hugging_face_model, local_dir=None):
         training_history = json.load(f)
 
     return weights_pth, training_history
-
 
 def get_hparams_from_checkpoints(checkpoints_directory):
     """
@@ -128,7 +126,6 @@ def get_hparams_from_hugging(hugging_face_model):
         hparams = yaml.safe_load(f)
 
     return hparams
-
 
 def validate_training_context(retraining, checkpoints_directory, hugging_face_model):
     if retraining:
