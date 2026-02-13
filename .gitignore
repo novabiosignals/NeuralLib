@@ -7,3 +7,4 @@ train_test/
 data_preprocessing/gib01.py.DS_Store
 .DS_Store
 NeuralLib/.DS_Store
+results/
