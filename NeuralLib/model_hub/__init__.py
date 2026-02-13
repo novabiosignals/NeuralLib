@@ -1,7 +1,5 @@
-from .production_model import (
-    ProductionModel,
-    list_production_models,
-)
+from .production_model import *
+
 from .TL import (
     TLModel,
     TLFactory,

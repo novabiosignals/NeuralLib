@@ -12,15 +12,14 @@ hardcoding paths in different environments.
 """
 
 # Base directory for the `dev` folder (assumes `config.py` is inside NeuralLib in the `dev` folder)
-DEV_BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+DEV_BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DATA_BASE_DIR = os.path.join(DEV_BASE_DIR, "data")
 RESULTS_BASE_DIR = os.path.join(DEV_BASE_DIR, "results")
 HUGGING_MODELS_BASE_DIR = os.path.join(DEV_BASE_DIR, "hugging_prodmodels")
 
 # Directories for saving processed datasets
-DATASETS_ECG_G = os.path.join(DATA_BASE_DIR, "gib01_ecg", "datasets")
-DATASETS_PTB_DENOISER = os.path.join(DATA_BASE_DIR, "ptb-xl", "dataset_denoiser")
-DATASETS_JESSICA = os.path.join(DATA_BASE_DIR, "jessica")
+DATASETS_ECG_G = os.path.join(DATA_BASE_DIR, "ecg_peak")
+DATASETS_PTB_DENOISER = os.path.join(DATA_BASE_DIR, "ptb_xl", "dataset_denoiser")
 DATASETS_TESTS = os.path.join(DATA_BASE_DIR, "tests")
 
 # Create the directories if they don't exist

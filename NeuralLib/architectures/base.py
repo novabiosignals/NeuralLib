@@ -357,6 +357,8 @@ class Architecture(pl.LightningModule):
         final_weights_pth = os.path.join(self.checkpoints_directory, 'model_weights.pth')
         torch.save(self.state_dict(), final_weights_pth)
         print(f"Weights saved as {final_weights_pth}")
+        
+        return self.checkpoints_directory
 
     def retrain(self, path_x, path_y, patience, batch_size, epochs, gpu_id=None, all_samples=False,
                 samples=None, dataset_name=None, trained_for=None, enable_tensorboard=False,

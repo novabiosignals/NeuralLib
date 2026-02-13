@@ -239,6 +239,7 @@ class ProductionModel(arc.Architecture):
 
         # Apply post-processing if provided
         processed_output = post_process_fn(output, **post_process_kwargs) if post_process_fn else output.cpu().numpy()
+        print("Prediction Is Done!")
 
         return processed_output
 

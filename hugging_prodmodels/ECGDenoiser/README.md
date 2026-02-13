@@ -2,64 +2,62 @@
 library_name: pytorch
 tags:
 - biosignals
-- ecgdenoiser
+- ecgdenoisernl
 metrics:
 - validation_loss
 ---
-# Model Card for ECGDenoiser
+# Model Card for ECGDenoiserNL
 
     
-Collection: NeuralLib: Deep Learning Models for Biosignals Processing
+- Collection: NeuralLib: Deep Learning Models for Biosignals Processing
 
-Description: GRU-based model for ECG noise removal. Model and results published in the paper 'Cleaning ECG with Deep Learning: A Denoiser Tested in Industrial Settings'
-
-
-- **Architecture**: GRUseq2seq
-- **Model Name**: ECGDenoiser
-- **Task**: ecg denoising: removing MA, BW and EM noise
-- **Train Dataset**: PTB-XL+MIT-BIH-Noise-Stress-Test-Database
-
-Biosignal(s): ECG
-
-Sampling frequency: 360
+- Description: GRU-based model for ECG peak detection
 
 
-# Benchmark Results
+```json
+{
+    "architecture": "GRUseq2seq",
+    "model_name": "ECGDenoiser",
+    "train_dataset": "PTB-XL+MIT-BIH-Noise-Stress-Test-Database",
+    "biosignal": "ECG",
+    "sampling_frequency": 360,
+    "task": "ecg denoising: removing MA, BW and EM noise",
+    "gpu_model": "NVIDIA GeForce GTX 1080 Ti",
+    "epochs": 200,
+    "optimizer": "Adam",
+    "learning_rate": 0.005,
+    "validation_loss": 0,
+    "training_time": 0,
+    "retraining": false,
+    "efficiency_flops": 0,
+    "efficiency_params": 26121
+}
 
-**Validation Loss**: 0.0000 
 
-**Training Time**: 0.00 seconds 
+## Hyperparameters
 
-**FLOPs per timestep**: 0 
-
-**Number of trainable parameters**: 26121 
-
-
-
-# Hyperparameters
-
-| Parameter | Value |
-|-----------|-------|
-| bidirectional | True |
-| dropout | 0 |
-| hid_dim | [64, 1] |
-| learning_rate | 0.005 |
-| model_name | ECGDenoiser |
-| multi_label | False |
-| n_features | 1 |
-| n_layers | 2 |
-| num_classes | NA |
-| task | regression |
-| fc_out_bool | False |
+bidirectional: true
+dropout: 0
+hid_dim:
+- 64
+- 1
+learning_rate: 0.005
+model_name: ECGDenoiser
+multi_label: false
+n_features: 1
+n_layers: 2
+num_classes: NA
+task: regression
+fc_out_bool: false
 
 
 # Example
 
-import NeuralLib.model_hub as mh
+import torch
 
-model_name = ECGDenoiser()
+from production_models import ECGDenoiserNL
 
-model = mh.ProductionModel(model_name=model_name)
+model = ECGDenoiserNL()
 
 signal = torch.rand(1, 100, 1)  # Example input signal
 
