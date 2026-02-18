@@ -20,6 +20,12 @@ class ProductionModel(arc.Architecture):
     - Any public or private Hugging Face repository if explicitly specified.
     """
 
+    DEFAULT_MODEL_REPOS = {
+        "ECGPeakDetector": "marianaagdias/ECGPeakDetector",
+        "ECGDenoiser": "marianaagdias/ECGDenoiser",
+        # Add more predefined models here as needed
+    }
+
     def __init__(self, model_name, hugging_repo=None):
         """
         Initialize the production model.
@@ -259,7 +265,7 @@ def list_production_models():
     Lists all models in the NeuralLib Hugging Face collection.
     """
     
-    collection_id = "novabiosignals/neurallib-deep-learning-models-for-biosignals-processing"
+    collection_id = "https://huggingface.co/collections/novabiosignals/neurallib-deep-learning-models-for-biosignals-processing"
     print(f"Models in NeuralLib collection ({collection_id}):")
     collection = get_collection(collection_id)
     for item in collection.items:

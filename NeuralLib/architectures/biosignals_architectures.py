@@ -75,14 +75,14 @@ class GRUseq2seq(Architecture):
         if bidir_per_layer is None:
             bidir_per_layer = [bidirectional] * n_layers
         else:
-            print(f"WARNING: The setting length of bidir for each layer is not eaqual to model layers, automatically broadcasting")
             if len(bidir_per_layer) < n_layers:
+                print(f"WARNING: The setting length of bidir for each layer is less than model layers, automatically broadcasting")
                 # pd with the last value
                 pad_value = bidir_per_layer[-1]
                 bidir_per_layer = list(bidir_per_layer) + [pad_value] * (n_layers - len(bidir_per_layer))
             elif len(bidir_per_layer) > n_layers:
-                bidir_per_layer = list(bidir_per_layer[:n_layers])
-                
+                print(f"WARNING: The setting length of bidir for each layer is more than model layers, automatically broadcasting")
+                bidir_per_layer = list(bidir_per_layer[:n_layers])    
         self.bidir_per_layer = bidir_per_layer
 
         # Ensure hid_dim matches n_layers
@@ -222,13 +222,15 @@ class GRUseq2one(Architecture):
         if bidir_per_layer is None:
             bidir_per_layer = [bidirectional] * n_layers
         else:
-            print(f"WARNING: The setting length of bidir for each layer is not eaqual to model layers, automatically broadcasting")
             if len(bidir_per_layer) < n_layers:
+                print(f"WARNING: The setting length of bidir for each layer is less than model layers, automatically broadcasting")
                 # pd with the last value
                 pad_value = bidir_per_layer[-1]
                 bidir_per_layer = list(bidir_per_layer) + [pad_value] * (n_layers - len(bidir_per_layer))
             elif len(bidir_per_layer) > n_layers:
-                bidir_per_layer = list(bidir_per_layer[:n_layers])
+                print(f"WARNING: The setting length of bidir for each layer is more than model layers, automatically broadcasting")
+                bidir_per_layer = list(bidir_per_layer[:n_layers])    
+        self.bidir_per_layer = bidir_per_layer
 
         self.bidir_per_layer = list(map(bool, bidir_per_layer))
 
