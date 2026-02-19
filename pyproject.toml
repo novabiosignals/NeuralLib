@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=65.5.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neurallib"  
+version = "0.1.0"                
+description = "Deep learning library for biosignal processing."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }       
+
+authors = [
+  {name = "Mariana Dias", email = "mariana.dias@vohcolab.org"},
+  {name = "Nianfei Ao", email = "n.ao@fct.unl.pt"},
+  {name = "Hugo Gamboa", email = "hgamboa@fct.unl.pt"},
+]
+
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+# 运行时依赖
+dependencies = [
+  "calflops==0.3.2",
+  "huggingface_hub==0.36.0",
+  "matplotlib==3.10.8",
+  "numpy==2.4.2",
+  "pytorch_lightning==2.5.5",
+  "PyYAML==6.0.3",
+  "scikit_learn==1.8.0",
+  "scipy==1.17.0",
+  "torch==2.7.1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest==8.4.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/novabiosignals/NeuralLib"
+Source = "https://github.com/novabiosignals/NeuralLib"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["NeuralLib*"]
+exclude = [
+  "Tutorial4BIOSTEC", "tutorials", 
+]

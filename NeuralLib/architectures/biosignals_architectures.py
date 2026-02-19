@@ -21,8 +21,6 @@ def list_architectures():
     return architectures
 
 
-# TODO: ADD INPUT VERIFICATION TO EACH ARCHITECTURE (TASK MUST BE CLASSIFICATION OR REGRESSION, ETC.)
-# Sequence-to-sequence (direct correspondence between input and output) module
 class GRUseq2seq(Architecture):
     def __init__(
             self, model_name, n_features, hid_dim, n_layers, dropout, learning_rate, 

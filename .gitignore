@@ -8,3 +8,10 @@ data_preprocessing/gib01.py.DS_Store
 .DS_Store
 NeuralLib/.DS_Store
 results/
+dist/
+*.egg-info/
+*.bak
+test.py
+data/
+config_ori.py
+config_ori.py

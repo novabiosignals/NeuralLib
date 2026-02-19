@@ -176,7 +176,7 @@ def run_grid_search(architecture_name, architecture_params_options, train_params
 # Example usage
 if __name__ == "__main__":
 
-    from NeuralLib.config import DATASETS_GIB01
+    from config_ori import DATASETS_GIB01
     import os
     X = os.path.join(DATASETS_GIB01, 'x')
     Y_BIN = os.path.join(DATASETS_GIB01, 'y_bin')

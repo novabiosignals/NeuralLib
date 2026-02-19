@@ -1,6 +1,6 @@
 from NeuralLib.model_hub import TLModel, TLFactory, list_production_models
 from NeuralLib.architectures import GRUseq2seq
-from NeuralLib.config import DATASETS_ECG_G  # peaks dataset
+from config_ori import DATASETS_ECG_G  # peaks dataset
 import os
 
 # Data paths

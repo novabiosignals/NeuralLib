@@ -1,5 +1,5 @@
 from NeuralLib.architectures import GRUseq2seq
-from NeuralLib.config import DATASETS_ECG_G
+from config_ori import DATASETS_ECG_G
 import os
 
 # Data paths
